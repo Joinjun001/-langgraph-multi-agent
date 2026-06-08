@@ -486,26 +486,22 @@
                         </span>
                     </label>
                     <input type="file" id="fileInput" accept=".txt,.md" style="display: none;" onchange="handleFileUpload(event)">
-                    <textarea id="docInput" placeholder="여기에 학습시킬 문서를 입력하거나 파일을 업로드/복사해 주세요..."></textarea>
+                    <textarea id="docInput" placeholder="여기에 학습시킬 문서를 입력하거나 파일을 업로드/복사해 주세요..." oninput="simulateChunking()"></textarea>
                 </div>
 
                 <div class="flex-row">
                     <div class="input-group">
-                        <label>Chunk Size <span class="val" id="chunkSizeVal">120자</span></label>
-                        <input type="range" id="chunkSize" min="30" max="300" value="120" oninput="updateSliders()">
+                        <label>Chunk Size <span class="val" id="chunkSizeVal">150자</span></label>
+                        <input type="range" id="chunkSize" min="50" max="500" step="50" value="150" oninput="updateSliders(); simulateChunking()">
                     </div>
                     <div class="input-group">
                         <label>Chunk Overlap <span class="val" id="chunkOverlapVal">20자</span></label>
-                        <input type="range" id="chunkOverlap" min="0" max="100" value="20" oninput="updateSliders()">
+                        <input type="range" id="chunkOverlap" min="0" max="250" step="10" value="20" oninput="updateSliders(); simulateChunking()">
                     </div>
                 </div>
 
                 <div class="flex-row">
-                    <button class="btn btn-secondary" onclick="simulateChunking()">
-                        <i class="fa-solid fa-scissors"></i>
-                        <span>분할 시뮬레이션</span>
-                    </button>
-                    <button class="btn" id="importBtn" onclick="importChunks()" disabled>
+                    <button class="btn" id="importBtn" onclick="importChunks()" disabled style="width: 100%;">
                         <i class="fa-solid fa-database"></i>
                         <span>벡터 DB에 등록</span>
                     </button>
@@ -678,6 +674,7 @@
         window.onload = function() {
             initChart();
             loadDocuments();
+            updateSliders();
         };
 
         function updateSliders() {
@@ -703,16 +700,20 @@
         function simulateChunking() {
             const text = document.getElementById('docInput').value.trim();
             if (!text) {
-                alert('청킹 시뮬레이션을 돌릴 텍스트를 입력해 주세요!');
+                document.getElementById('chunkPreviewSection').style.display = 'none';
+                document.getElementById('importBtn').disabled = true;
+                generatedChunks = [];
                 return;
             }
 
-            const size = parseInt(document.getElementById('chunkSize').value);
-            const overlap = parseInt(document.getElementById('chunkOverlap').value);
+            let size = parseInt(document.getElementById('chunkSize').value);
+            let overlap = parseInt(document.getElementById('chunkOverlap').value);
 
             if (overlap >= size) {
-                alert('Overlap은 Chunk Size보다 작아야 합니다!');
-                return;
+                overlap = size - 10;
+                if (overlap < 0) overlap = 0;
+                document.getElementById('chunkOverlap').value = overlap;
+                document.getElementById('chunkOverlapVal').innerText = `${overlap}자`;
             }
 
             generatedChunks = [];
