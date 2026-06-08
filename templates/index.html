@@ -405,8 +405,14 @@
         }
 
         .chunk-block {
-            padding: 0.5rem 0.75rem;
-            border-radius: 8px;
+            padding: 0.65rem 0.85rem;
+            background-color: #ffffff;
+            border-top: 3px solid var(--accent-primary);
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
+            border-radius: 4px 4px 8px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             color: #1e293b;
             font-weight: 600;
             display: block;
@@ -1022,28 +1028,9 @@
             previewVisuals.innerHTML = '';
             previewSection.style.display = 'block';
 
-            const colors = [
-                'rgba(79, 70, 229, 0.06)',
-                'rgba(79, 70, 229, 0.12)',
-                'rgba(79, 70, 229, 0.18)',
-                'rgba(37, 99, 235, 0.06)',
-                'rgba(37, 99, 235, 0.12)',
-                'rgba(37, 99, 235, 0.18)'
-            ];
-            const borders = [
-                'rgba(79, 70, 229, 0.3)',
-                'rgba(79, 70, 229, 0.4)',
-                'rgba(79, 70, 229, 0.5)',
-                'rgba(37, 99, 235, 0.3)',
-                'rgba(37, 99, 235, 0.4)',
-                'rgba(37, 99, 235, 0.5)'
-            ];
-
             generatedChunks.forEach((chunk, index) => {
                 const block = document.createElement('div');
                 block.className = 'chunk-block';
-                block.style.backgroundColor = colors[index % colors.length];
-                block.style.border = `1px solid ${borders[index % borders.length]}`;
                 
                 let displayText = chunk;
                 if (chunk.length > 50) {
