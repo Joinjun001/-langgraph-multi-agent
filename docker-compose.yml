@@ -1,0 +1,9 @@
+services:
+  rag-agent:
+    build: .
+    container_name: langgraph-rag-agent
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    restart: always

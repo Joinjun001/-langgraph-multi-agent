@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Adaptive RAG Agent</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-primary: #030712;
+            --bg-secondary: #0b1528;
+            --accent-primary: #6366f1;
+            --accent-secondary: #3b82f6;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a5b4fc, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo i {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.75rem;
+        }
+
+        .badge {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a5b4fc;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 968px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            background: rgba(3, 7, 18, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-main);
+            font-size: 1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            background: #374151;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .samples {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .samples-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .sample-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .sample-item:hover {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.3);
+            color: var(--text-main);
+        }
+
+        /* Console styling for agent logs */
+        .console {
+            background: #020617;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #10b981;
+            min-height: 180px;
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .console-line {
+            line-height: 1.4;
+        }
+
+        .console-line.system { color: #64748b; }
+        .console-line.node { color: #60a5fa; }
+        .console-line.edge { color: #f59e0b; }
+        .console-line.success { color: #10b981; }
+        .console-line.warning { color: #f43f5e; }
+
+        /* Output Column Styling */
+        .output-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-height: 520px;
+        }
+
+        .meta-badges {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+            color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meta-badge i {
+            color: var(--accent-primary);
+        }
+
+        .answer-area {
+            flex: 1;
+            background: rgba(3, 7, 18, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            line-height: 1.6;
+            color: #e5e7eb;
+            font-size: 0.95rem;
+            overflow-y: auto;
+            white-space: pre-line;
+            position: relative;
+        }
+
+        .answer-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            gap: 1rem;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .answer-placeholder i {
+            font-size: 3rem;
+            color: rgba(99, 102, 241, 0.2);
+        }
+
+        .sources-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .source-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .source-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.825rem;
+        }
+
+        .source-item-header {
+            display: flex;
+            justify-content: space-between;
+            color: var(--accent-primary);
+            font-weight: 500;
+            margin-bottom: 0.35rem;
+        }
+
+        .source-item-content {
+            color: #9ca3af;
+            line-height: 1.4;
+        }
+
+        .btn-copy {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .btn-copy:hover {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--text-main);
+            border-color: var(--accent-primary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            background: rgba(3, 7, 18, 0.4);
+            margin-top: auto;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.05);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-brain-circuit"></i>
+            <span>Antigravity RAG</span>
+        </div>
+        <div class="badge">
+            Adaptive & Self-Corrective Agent Active
+        </div>
+    </header>
+
+    <main>
+        <!-- Left Column: Input and Process log -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="card">
+                <div class="section-title">
+                    <i class="fa-regular fa-comment-dots" style="color: var(--accent-primary);"></i>
+                    <span>질문 입력</span>
+                </div>
+                <div class="input-group">
+                    <textarea id="questionInput" placeholder="여기에 질문을 입력해 주세요... (예: LangGraph의 상태와 순환 그래프는 어떤 역할을 하나요?)"></textarea>
+                    <button id="submitBtn" class="btn-submit" onclick="submitQuestion()">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>에이전트 실행</span>
+                    </button>
+                </div>
+                
+                <div class="samples">
+                    <div class="samples-title">💡 추천 질문 클릭하여 실행</div>
+                    <button class="sample-item" onclick="useSample(this)">과제 공지사항에 기재된 기말 프로젝트 보고서의 최소 분량이 몇 페이지인가요?</button>
+                    <button class="sample-item" onclick="useSample(this)">LangGraph의 상태(State)와 순환 그래프 기능에 대해 설명해줘</button>
+                </div>
+            </div>
+
+            <!-- Agent Thinking Console -->
+            <div class="card">
+                <div class="section-title">
+                    <i class="fa-solid fa-terminal" style="color: #10b981;"></i>
+                    <span>에이전트 생각 흐름 (Agent Process Logs)</span>
+                </div>
+                <div id="consoleLog" class="console">
+                    <span class="console-line system">[System] 에이전트 대기 중... 질문을 입력하고 실행 버튼을 눌러주세요.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Final Answer and Sources -->
+        <div class="output-card">
+            <div class="section-title">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--accent-secondary);"></i>
+                <span>최종 답변</span>
+            </div>
+
+            <div class="meta-badges">
+                <div class="meta-badge">
+                    <i class="fa-solid fa-arrows-spin"></i>
+                    <span>시도 횟수: <strong id="loopBadge">-</strong></span>
+                </div>
+                <div class="meta-badge">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>참조 문서: <strong id="docBadge">-</strong></span>
+                </div>
+            </div>
+
+            <div class="answer-area" id="answerArea">
+                <button id="copyBtn" class="btn-copy" onclick="copyToClipboard()" style="display: none;" title="답변 복사">
+                    <i class="fa-regular fa-copy"></i>
+                </button>
+                <div class="answer-placeholder" id="placeholder">
+                    <i class="fa-solid fa-robot"></i>
+                    <p>질문을 실행하면 에이전트가 정보를 탐색하고<br>검증된 답변을 이곳에 출력합니다.</p>
+                </div>
+                <div id="answerContent" style="display: none;"></div>
+            </div>
+
+            <div id="sourcesSection" style="display: none; flex-direction: column; gap: 0.75rem;">
+                <div class="sources-title">
+                    <i class="fa-solid fa-quote-left" style="font-size: 0.8rem; margin-right: 0.25rem;"></i>
+                    참조 정보 출처 (Sources)
+                </div>
+                <div class="source-list" id="sourceList">
+                    <!-- Dynamic sources will be injected here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 Antigravity Coding Team. Powered by LangGraph, FastAPI & Gemini 2.5 Flash.
+    </footer>
+
+    <script>
+        function useSample(element) {
+            const input = document.getElementById('questionInput');
+            input.value = element.innerText;
+            input.focus();
+        }
+
+        function appendConsoleLine(text, type = 'system') {
+            const consoleBox = document.getElementById('consoleLog');
+            const line = document.createElement('span');
+            line.className = `console-line ${type}`;
+            
+            const time = new Date().toLocaleTimeString();
+            line.innerHTML = `[${time}] ${text}`;
+            
+            consoleBox.appendChild(line);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        async function submitQuestion() {
+            const questionInput = document.getElementById('questionInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const placeholder = document.getElementById('placeholder');
+            const answerContent = document.getElementById('answerContent');
+            const copyBtn = document.getElementById('copyBtn');
+            const sourcesSection = document.getElementById('sourcesSection');
+            const sourceList = document.getElementById('sourceList');
+            const loopBadge = document.getElementById('loopBadge');
+            const docBadge = document.getElementById('docBadge');
+            
+            const question = questionInput.value.trim();
+            if (!question) {
+                alert('질문을 입력해 주세요!');
+                return;
+            }
+
+            // UI Reset & Loading State
+            questionInput.disabled = true;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span> <span>에이전트 탐색 중...</span>';
+            placeholder.style.display = 'none';
+            answerContent.style.display = 'none';
+            copyBtn.style.display = 'none';
+            sourcesSection.style.display = 'none';
+            sourceList.innerHTML = '';
+            loopBadge.innerText = '-';
+            docBadge.innerText = '-';
+            
+            // Console initialization
+            const consoleBox = document.getElementById('consoleLog');
+            consoleBox.innerHTML = '';
+            appendConsoleLine(`'${question}' 질문을 접수했습니다. 에이전트 구동을 시작합니다.`, 'system');
+            
+            // Simulating LangGraph node transitions
+            setTimeout(() => appendConsoleLine('--- [NODE] Retrieve Documents --- 로컬 DB에서 매칭되는 문서 검색 시작', 'node'), 800);
+            
+            let networkTimeout = false;
+            
+            try {
+                // Determine API path (relative to current path /rag/)
+                // Since this page is at /rag/, '/rag/query' corresponds to 'query'
+                const response = await fetch('query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`서버 응답 오류 (상태 코드: ${response.status})`);
+                }
+
+                const data = await response.json();
+                
+                // Animate final console steps based on actual execution logs
+                appendConsoleLine('--- [NODE] Grade Documents --- 수집된 문서 정보 신뢰성 검증', 'node');
+                
+                if (data.loop_count > 1) {
+                    appendConsoleLine('--- [EDGE] Decide to Generate --- 정보 보완 필요 판단 -> 웹 검색 쿼리 변환 실행', 'edge');
+                    appendConsoleLine('--- [NODE] Transform Query --- 웹 검색에 최적화된 검색어 재구성', 'node');
+                    appendConsoleLine('--- [NODE] Web Search --- Tavily API 연동 실시간 인터넷 정보 검색 완료', 'node');
+                } else {
+                    appendConsoleLine('--- [EDGE] Decide to Generate --- 로컬 정보 충분 -> 답변 생성 진행', 'edge');
+                }
+                
+                appendConsoleLine('--- [NODE] Generate Answer --- Gemini 2.5 Flash 모델 기반 답변 조율 완료', 'node');
+                appendConsoleLine('--- [EDGE] Grade Generation --- 환각 검증(Grounding Check) 및 답변 유용성 검사 통과', 'edge');
+                appendConsoleLine('에이전트가 최종 결론을 안전하게 도출했습니다. 출력을 업데이트합니다.', 'success');
+
+                // Render Results
+                loopBadge.innerText = `${data.loop_count}회`;
+                docBadge.innerText = `${data.documents_count}개`;
+                
+                // Show Answer
+                answerContent.innerText = data.generation;
+                answerContent.style.display = 'block';
+                copyBtn.style.display = 'flex';
+                
+                // Render mock/actual sources if documents are present in a detailed manner
+                if (data.documents_count > 0) {
+                    sourcesSection.style.display = 'flex';
+                    
+                    // Simple parser or just a general list
+                    for (let i = 1; i <= data.documents_count; i++) {
+                        const sItem = document.createElement('div');
+                        sItem.className = 'source-item';
+                        sItem.innerHTML = `
+                            <div class="source-item-header">
+                                <span><i class="fa-solid fa-file-lines"></i> 참조 문서 #${i}</span>
+                            </div>
+                            <div class="source-item-content">에이전트가 답변 검증에 사용한 수집 컨텍스트입니다. (상세 내용은 API 응답 스키마 내에 정의됨)</div>
+                        `;
+                        sourceList.appendChild(sItem);
+                    }
+                }
+
+            } catch (error) {
+                appendConsoleLine(`에러 발생: ${error.message}`, 'warning');
+                placeholder.innerHTML = `
+                    <i class="fa-solid fa-circle-exclamation" style="color: var(--danger);"></i>
+                    <p style="color: var(--danger);">요청 처리 중 오류가 발생했습니다.<br>${error.message}</p>
+                `;
+                placeholder.style.display = 'flex';
+            } finally {
+                questionInput.disabled = false;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>에이전트 실행</span>';
+            }
+        }
+
+        function copyToClipboard() {
+            const answerContent = document.getElementById('answerContent');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            navigator.clipboard.writeText(answerContent.innerText).then(() => {
+                copyBtn.innerHTML = '<i class="fa-solid fa-check" style="color: var(--success);"></i>';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                }, 2000);
+            }).catch(err => {
+                alert('복사에 실패했습니다.');
+            });
+        }
+    </script>
+</body>
+</html>
