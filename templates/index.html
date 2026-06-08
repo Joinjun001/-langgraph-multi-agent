@@ -745,10 +745,14 @@
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     <!-- Registered Chunks card -->
                     <div class="card" style="padding: 1.5rem;">
-                        <div class="section-title" style="justify-content: space-between; margin-bottom: 0.75rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div class="section-title" style="justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                 <i class="fa-solid fa-server" style="color: var(--accent-secondary);"></i>
-                                <span>등록된 청크 조각 (<span id="totalDocCount">0</span>개)</span>
+                                <span>등록된 청크 (<span id="totalDocCount">0</span>개)</span>
+                                <span id="embeddingProgress" style="display: none; align-items: center; gap: 0.35rem; color: var(--accent-primary); font-size: 0.8rem; font-weight: 700; margin-left: 0.5rem;">
+                                    <span class="spinner" style="width: 12px; height: 12px; border-width: 2px;"></span>
+                                    <span>적재 중: <span id="embProgressNum">0/0</span></span>
+                                </span>
                             </div>
                             <button class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; box-shadow: none;" onclick="clearVectorDB()">
                                 <i class="fa-solid fa-trash-can"></i> DB 비우기
@@ -1014,20 +1018,34 @@
             previewSection.style.display = 'block';
 
             const colors = [
-                'rgba(79, 70, 229, 0.12)',  // Indigo
-                'rgba(37, 99, 235, 0.12)',  // Blue
-                'rgba(5, 150, 105, 0.12)',  // Green
-                'rgba(217, 119, 6, 0.12)',  // Orange
-                'rgba(124, 58, 237, 0.12)', // Purple
-                'rgba(219, 39, 119, 0.12)'  // Pink
+                'rgba(79, 70, 229, 0.06)',
+                'rgba(79, 70, 229, 0.12)',
+                'rgba(79, 70, 229, 0.18)',
+                'rgba(37, 99, 235, 0.06)',
+                'rgba(37, 99, 235, 0.12)',
+                'rgba(37, 99, 235, 0.18)'
+            ];
+            const borders = [
+                'rgba(79, 70, 229, 0.3)',
+                'rgba(79, 70, 229, 0.4)',
+                'rgba(79, 70, 229, 0.5)',
+                'rgba(37, 99, 235, 0.3)',
+                'rgba(37, 99, 235, 0.4)',
+                'rgba(37, 99, 235, 0.5)'
             ];
 
             generatedChunks.forEach((chunk, index) => {
                 const block = document.createElement('div');
                 block.className = 'chunk-block';
                 block.style.backgroundColor = colors[index % colors.length];
-                block.style.border = `1px solid ${colors[index % colors.length].replace('0.12', '0.4')}`;
-                block.innerText = `[청크 #${index + 1}: ${chunk.length}자] ${chunk.substring(0, 15)}...`;
+                block.style.border = `1px solid ${borders[index % borders.length]}`;
+                
+                let displayText = chunk;
+                if (chunk.length > 50) {
+                    displayText = chunk.substring(0, 40) + '...' + chunk.substring(chunk.length - 10);
+                }
+                
+                block.innerText = `[청크 #${index + 1}: ${chunk.length}자] ${displayText}`;
                 block.title = chunk;
                 previewVisuals.appendChild(block);
             });
@@ -1035,16 +1053,26 @@
             document.getElementById('importBtn').disabled = false;
         }
 
-        // Imports chunks to Backend Vector DB
+        // Imports Chunks to Backend Vector DB
         async function importChunks() {
             if (generatedChunks.length === 0) return;
             
-            const importBtn = document.getElementById('importBtn');
-            importBtn.disabled = true;
-            importBtn.innerHTML = '<div class="spinner"></div> <span>벡터 생성 및 적재 중...</span>';
+            // Go to Step 3 immediately to see the chart rendering in real-time
+            resetToStep(3);
+            
+            const progressEl = document.getElementById('embeddingProgress');
+            const progressNumEl = document.getElementById('embProgressNum');
+            progressEl.style.display = 'flex';
+            progressNumEl.innerText = `0 / ${generatedChunks.length}`;
+            
+            // Disable RAG controls during indexing
+            document.getElementById('queryInput').disabled = true;
+            document.getElementById('queryBtn').disabled = true;
 
             try {
                 for (let i = 0; i < generatedChunks.length; i++) {
+                    progressNumEl.innerText = `${i + 1} / ${generatedChunks.length}`;
+                    
                     const response = await fetch('add-document', {
                         method: 'POST',
                         headers: {
@@ -1056,13 +1084,23 @@
                         })
                     });
                     if (!response.ok) throw new Error('API 임베딩 연산 실패');
+                    
+                    // Real-time update: fetch documents and update the chart
+                    await loadDocuments();
+                    
+                    // Add a tiny delay to visualize points appearing one-by-one
+                    await new Promise(resolve => setTimeout(resolve, 250));
                 }
                 
-                alert(`성공적으로 ${generatedChunks.length}개의 조각을 임베딩하여 벡터 DB에 등록했습니다!`);
-                resetToStep(3); // Go to Step 3: Embeddings space view
-                loadDocuments();
+                progressEl.style.display = 'none';
             } catch (error) {
                 alert(`벡터 등록 중 오류가 발생했습니다: ${error.message}`);
+                progressEl.style.display = 'none';
+            } finally {
+                document.getElementById('queryInput').disabled = false;
+                document.getElementById('queryBtn').disabled = false;
+                
+                const importBtn = document.getElementById('importBtn');
                 importBtn.disabled = false;
                 importBtn.innerHTML = '<i class="fa-solid fa-database"></i> 벡터 DB에 등록 및 임베딩 생성';
             }
@@ -1155,7 +1193,7 @@
 
                 // Move Wizard progress to Step 4
                 resetToStep(4);
-                document.getElementById('pipelineSection').style.display = 'flex';
+                document.getElementById('pipelineSection').style.display = 'grid';
 
                 // Step 1: Query Vector (Generate partial display)
                 const mockVector = Array.from({length: 24}, () => (Math.random() * 0.2 - 0.1).toFixed(6));
