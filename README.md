@@ -1,11 +1,11 @@
-# 🧠 Adaptive & Self-Corrective RAG Agent
+#  Adaptive & Self-Corrective RAG Agent
 
 LangGraph와 FastAPI를 기반으로 구축된 **자가 수정 및 적응형 RAG(Adaptive & Self-Corrective RAG) 에이전트** 시스템입니다. 
 로컬 지식베이스 검색 결과가 부족하거나 부적합할 때 스스로 질문을 재구성하여 웹 검색(Tavily API)을 수행하고, 생성된 답변의 환각(Hallucination) 및 유용성을 다단계로 검증하여 최적의 정확한 답변을 도출합니다.
 
 ---
 
-## 💻 주요 기능 및 아키텍처
+##  주요 기능 및 아키텍처
 
 *   **상태 전이 기반 순환형 워크플로우(Stateful Cyclic Graph)**: LangGraph를 활용해 단순 체인형 RAG가 아닌, 평가 결과에 따라 경로를 수정하고 루프를 도는 동적 에이전트 구현
 *   **자가 수정 RAG(Self-Corrective RAG)**: LLM 문서 평가기를 통해 검색된 정보의 관련성을 평가하고 무관한 정보는 필터링
@@ -16,7 +16,7 @@ LangGraph와 FastAPI를 기반으로 구축된 **자가 수정 및 적응형 RAG
 
 ---
 
-## 📐 워크플로우 다이어그램
+##  워크플로우 다이어그램
 
 ```mermaid
 graph TD
@@ -40,7 +40,7 @@ graph TD
 
 ---
 
-## 🛠️ 기술 스택 (Tech Stack)
+##  기술 스택 (Tech Stack)
 
 *   **Framework**: LangGraph, LangChain Core
 *   **LLM**: Google Gemini 2.5 Flash (`gemini-2.5-flash`)
@@ -51,26 +51,9 @@ graph TD
 
 ---
 
-## 🚀 시작 가이드 (Quick Start)
 
-### 1. 환경 변수 설정
-프로젝트 루트 디렉토리에 `.env` 파일을 생성하고 필요한 API 키를 입력합니다.
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-GOOGLE_API_KEY=your_gemini_api_key_here
-TAVILY_API_KEY=your_tavily_api_key_here
-```
-
-### 2. Docker Compose로 실행 (권장)
-프로젝트는 Docker 컨테이너 환경에서 실행하는 것을 권장합니다.
-```bash
-# 컨테이너 빌드 및 백그라운드 구동
-docker compose up -d --build
-```
 *   **실시간 서비스 웹 UI 접속**: [https://injun-cloud.duckdns.org/rag/](https://injun-cloud.duckdns.org/rag/)
-*   **실시간 서비스 API 문서**: [https://injun-cloud.duckdns.org/rag/docs](https://injun-cloud.duckdns.org/rag/docs)
-*   **로컬 웹 UI 접속**: `http://localhost:8000/`
-*   **로컬 API 문서 (Swagger)**: `http://localhost:8000/docs`
+
 
 ### 3. 로컬 가상환경에서 실행
 ```bash
@@ -87,7 +70,7 @@ python app.py
 
 ---
 
-## 📂 파일 구조 (Directory Structure)
+## 파일 구조 (Directory Structure)
 
 *   `app.py`: FastAPI 웹 서버 엔트리포인트 및 static UI 렌더링 라우터
 *   `main.py`: LangGraph 워크플로우 구성 및 로컬 CLI 테스터
